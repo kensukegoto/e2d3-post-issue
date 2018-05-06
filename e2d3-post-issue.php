@@ -9,7 +9,7 @@ class e2d3_post_issue
     public $global_github_conf = array(
         "gitUser" => "kensukegoto",
         "gitRepo" => "e2d3-post-issue",
-        "token" => "6083b171b3c7a24b4316c3957b9fef46932887cc",
+        "token" => "commit時は削除",
         "repo" => ''
     );
     
