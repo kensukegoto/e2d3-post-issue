@@ -6,32 +6,41 @@ class e2d3_post_issue
 {
     
     // 設定
-    public $global_github_conf = array(
-        "gitUser" => "kensukegoto",
-        "gitRepo" => "e2d3-post-issue",
-        "token" => "commit時は削除",
-        "repo" => ''
-    );
+    public $global_github_conf = array();
     
     
     // 画像の保存場所を作成
     public $issue_image_dirname;
     public $issue_image_urlname;
     
-    function __construct(){
+    public function __construct(){
         
         register_activation_hook(__FILE__,array($this,'activate'));
+        
+        // 投稿画面を改造
+        add_action('admin_menu', array($this,'set_git_token'));
+        $options = get_option('git_token');
+        $defaults = array(
+            "gitUser" => "",
+            "gitRepo" => "",
+            "token" => "",
+            "repo" => ""
+        );
+        $this->global_github_conf = wp_parse_args($options,$defaults);
+        
+        
+
+        // ChromePhp::log($this->global_github_conf);
 
         $this->issue_image_dirname  = wp_upload_dir()['basedir'].'/issue_image';
         $this->issue_image_urlname  = wp_upload_dir()['baseurl'].'/issue_image';
-        $this->global_github_conf['repo'] = "https://api.github.com/repos/{$this->global_github_conf["gitUser"]}/{$this->global_github_conf["gitRepo"]}/";
         
         add_action('wpcf7_before_send_mail','post_issue');
         add_filter('wpcf7_validate', 'wpcf7_validate_customize', 11, 2);
         
     }
     
-    function activate(){
+    public function activate(){
         
         $this->issue_image_dirname  = wp_upload_dir()['basedir'].'/issue_image';
         $this->issue_image_urlname  = wp_upload_dir()['baseurl'].'/issue_image';
@@ -40,7 +49,70 @@ class e2d3_post_issue
             wp_mkdir_p( $this->issue_image_dirname );
         }   
         flush_rewrite_rules();
+        
+        update_option('git_token',$this->global_github_conf);
     }
+    
+    public function set_git_token(){
+        add_options_page('GitHubの情報を設定','GitHub設定','manage_options','e2d3-post-issue.php',array($this,'option_page'));
+    }
+    
+    public function option_page(){
+    ?>
+      <div class="wrap">
+          <h2>GitHubの情報を設定</h2>
+        </div>
+    <?php
+        $conf = $this->global_github_conf;
+        if(isset($_POST['special_nonce'])){
+            check_admin_referer('special_action','special_nonce');
+            $gitUser = '';
+            $gitRepo = '';
+            $token = '';
+            if(isset($_POST['gitUser']) && $_POST['gitUser']!==''){
+                $gitUser = $_POST['gitUser'];
+            }
+            if(isset($_POST['gitRepo']) && $_POST['gitRepo']!==''){
+                $gitRepo = $_POST['gitRepo'];
+            }
+            if(isset($_POST['token']) && $_POST['token']!==''){
+                $token = $_POST['token'];
+            }
+            
+            $repo = "https://api.github.com/repos/{$gitUser}/{$gitRepo}/";
+            update_option('git_token',array(
+                "gitUser" => $gitUser,
+                "gitRepo" => $gitRepo,
+                "token" => $token,
+                "repo" => $repo
+            ));
+            
+            $conf=array(
+                "gitUser" => $gitUser,
+                "gitRepo" => $gitRepo,
+                "token" => $token,
+                "repo" => $repo
+            );
+            echo $gitUser.'<br>';
+            echo $gitRepo.'<br>';
+            echo $token.'<br>';
+            echo '保存しました。';
+        }
+    ?>
+       <form action="" method="post">
+           <?php wp_nonce_field('special_action','special_nonce'); ?>
+            <p>GitHubのユーザー名</p>
+            <input type="text" name="gitUser" value="<?php echo $conf['gitUser']; ?>">
+            <p>GitHubのリポジトリ名</p>
+            <input type="text" name="gitRepo" value="<?php echo $conf['gitRepo']; ?>">
+            <p>Personal access tokens</p>
+            <input type="text" name="token" value="<?php echo $conf['token']; ?>">
+            <?php submit_button(); ?>
+       </form>
+    <?php
+        
+    }
+    
 
 }
 
