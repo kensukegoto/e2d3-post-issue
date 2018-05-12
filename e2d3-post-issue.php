@@ -19,6 +19,8 @@ class e2d3_post_issue
         
         // 投稿画面を改造
         add_action('admin_menu', array($this,'set_git_token'));
+        add_action('admin_head', array($this,'add_css'));   
+        
         $options = get_option('git_token');
         $defaults = array(
             "gitUser" => "",
@@ -53,8 +55,24 @@ class e2d3_post_issue
         update_option('git_token',$this->global_github_conf);
     }
     
+    
+    public function add_css(){
+        // global $po;
+        
+        if(isset($_GET['page'])&&$_GET['page']==='e2d3-post-issue.php'){
+    
+    ?>
+        <link type="text/css" href="<?php echo plugins_url( 'style.css', __FILE__ ); ?>" rel="stylesheet" />
+    <?php
+        }
+    }
+    
+    
     public function set_git_token(){
+        
         add_options_page('GitHubの情報を設定','GitHub設定','manage_options','e2d3-post-issue.php',array($this,'option_page'));
+             
+        
     }
     
     public function option_page(){
