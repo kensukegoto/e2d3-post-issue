@@ -1,6 +1,6 @@
 <?php
 /*
-Plugin Name: 不具合報告送る君
+Plugin Name: POST ISSUE E2D3
 */
 class e2d3_post_issue
 {
@@ -21,7 +21,7 @@ class e2d3_post_issue
         add_action('admin_menu', array($this,'set_git_token'));
         add_action('admin_head', array($this,'add_css'));   
         
-        $options = get_option('git_token');
+        $options = get_option('e2d3_post_issue_token');
         $defaults = array(
             "gitUser" => "",
             "gitRepo" => "",
@@ -52,7 +52,7 @@ class e2d3_post_issue
         }   
         flush_rewrite_rules();
         
-        update_option('git_token',$this->global_github_conf);
+        update_option('e2d3_post_issue_token',$this->global_github_conf);
     }
     
     
@@ -70,7 +70,7 @@ class e2d3_post_issue
     
     public function set_git_token(){
         
-        add_options_page('GitHubの情報を設定','GitHub設定','manage_options','e2d3-post-issue.php',array($this,'option_page'));
+        add_options_page('GitHubの情報を設定','不具合報告（GitHub）','manage_options','e2d3-post-issue.php',array($this,'option_page'));
              
         
     }
@@ -81,12 +81,17 @@ class e2d3_post_issue
           <h2>GitHubの情報を設定</h2>
         </div>
     <?php
+        
         $conf = $this->global_github_conf;
+        
         if(isset($_POST['special_nonce'])){
+            
             check_admin_referer('special_action','special_nonce');
+            
             $gitUser = '';
             $gitRepo = '';
             $token = '';
+            
             if(isset($_POST['gitUser']) && $_POST['gitUser']!==''){
                 $gitUser = $_POST['gitUser'];
             }
@@ -98,32 +103,37 @@ class e2d3_post_issue
             }
             
             $repo = "https://api.github.com/repos/{$gitUser}/{$gitRepo}/";
-            update_option('git_token',array(
-                "gitUser" => $gitUser,
-                "gitRepo" => $gitRepo,
-                "token" => $token,
-                "repo" => $repo
-            ));
             
-            $conf=array(
+            $conf = array(
                 "gitUser" => $gitUser,
                 "gitRepo" => $gitRepo,
                 "token" => $token,
                 "repo" => $repo
             );
-            echo $gitUser.'<br>';
-            echo $gitRepo.'<br>';
-            echo $token.'<br>';
-            echo '保存しました。';
+            
+            update_option('e2d3_post_issue_token',$conf);
+            
+            echo '<p class="txt-save">保存しました。</p>';
         }
     ?>
-       <form action="" method="post">
+        <div class="explain">
+            <p>①「所有者名」にissueの送信先のリポジトリの所有ユーザー名</p>
+            <p>②「リポジトリ名」にissueの送信先のリポジトリ名</p>
+            <p>③「トークン」に発行したpersonal access token</p>
+            <p>ex.<br>
+            e2d3/e2d3のissueに送信するには「所有者名」にe2d3、「リポジトリ名」にe2d3と入力。<br>
+            「トークン」の入力は？<br>
+            基本は所有者が発行したトークンを使用するが、不具合送信報告用ユーザーを作成して、適切に権限を与えている場合は、
+            不具合報告送信用ユーザーが発行したトークンを使用できる。
+            </p>
+        </div>
+       <form class="post-issue-form" action="" method="post">
            <?php wp_nonce_field('special_action','special_nonce'); ?>
-            <p>GitHubのユーザー名</p>
+            <p>所有者名</p>
             <input type="text" name="gitUser" value="<?php echo $conf['gitUser']; ?>">
-            <p>GitHubのリポジトリ名</p>
+            <p>リポジトリ名</p>
             <input type="text" name="gitRepo" value="<?php echo $conf['gitRepo']; ?>">
-            <p>Personal access tokens</p>
+            <p>トークン</p>
             <input type="text" name="token" value="<?php echo $conf['token']; ?>">
             <?php submit_button(); ?>
        </form>

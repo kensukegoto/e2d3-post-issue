@@ -4,6 +4,25 @@ input[type="text"]{
 #wpbody{
     padding-right: 15px;
 }
+.txt-save{
+    font-size: 150%;
+    font-weight: bold;
+    display: inline-block;
+    padding: 10px;
+    border: 1px dotted;
+
+}
+.explain{
+    padding-top: 1em;
+    border-top: 1px solid #aaa;
+    margin-top: 1em;
+    padding-bottom: 1em;
+    border-bottom: 1px solid #aaa;
+    margin-bottom: 1em;
+}
+.post-issue-form p{
+    font-weight: bold;
+}
 @media (min-width:783px) {
     
     input[type="text"]{
